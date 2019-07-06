@@ -1,12 +1,14 @@
 const request = require('request-promise');
 const cheerio = require('cheerio');
 
+
 /* Create the base function to be run */
-const start = async () => {
+async function start(username){
     /* Here you replace the username with your actual instagram username that you want to check */
-    const username = "damelya_sw_"
+    var arrayhtml={}
+    
     const BASE_URL = `https://www.instagram.com/${username}/`;
-    var arrayhtml = []
+    
     /* Send the request and get the html content */
     let response = await request(
         BASE_URL,
@@ -49,8 +51,8 @@ const start = async () => {
     }
 }   
     arrayhtml["average_count_of_likes"]=averagecountoflikes/cnt;
-    var averagecountofcomments=0
-    var cntforcomments=0
+    var averagecountofcomments=0;
+    var cntforcomments=0;
     for (var i=0;i<f;i++){
         
         if (user["edge_owner_to_timeline_media"]["edges"][i]!== undefined){
@@ -59,9 +61,22 @@ const start = async () => {
         }
 }   
     arrayhtml["average_count_of_comments"]=averagecountofcomments/cntforcomments;
-
+    arrayhtml["cntposts"]=user["edge_owner_to_timeline_media"]["count"]
     
+   return arrayhtml;
     debugger;
-}
 
-start();
+}
+arrayhtml={};
+const username = "islambek.temirbek";
+let r =   start(username);
+e = r.then(function(arrayhtml){
+    return (arrayhtml);
+});
+const a = arrayhtml;
+f=e.then(function(a){//for understanding
+    console.log(a)
+})
+
+
+
