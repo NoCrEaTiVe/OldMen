@@ -1,0 +1,12 @@
+body {
+  margin: 0;
+  background-image: url("social.jpg");
+  background-size: cover;
+  overflow: auto;
+}
+header {
+  color: #959a79;
+  font-size: 4em;
+  margin-left: 10%;
+  margin-top: 3%;
+}
