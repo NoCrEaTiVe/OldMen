@@ -1,12 +1,12 @@
 const request = require('request-promise');
 const cheerio = require('cheerio');
 
-/* Create the base function to be ran */
+/* Create the base function to be run */
 const start = async () => {
     /* Here you replace the username with your actual instagram username that you want to check */
-    const USERNAME = "islambek.temirbek"
-    const BASE_URL = `https://www.instagram.com/${USERNAME}/`;
-
+    const username = "damelya_sw_"
+    const BASE_URL = `https://www.instagram.com/${username}/`;
+    var arrayhtml = []
     /* Send the request and get the html content */
     let response = await request(
         BASE_URL,
@@ -30,11 +30,36 @@ const start = async () => {
     let { entry_data: { ProfilePage : {[0] : { graphql : {user} }} } } = JSON.parse(/window\._sharedData = (.+);/g.exec(script)[1]);
     
     /* Output the data */
-    console.log("Biography:"+user["biography"]);
-    console.log("Full name is "+user["full_name"])
-    console.log("Count of followed by"+user["edge_followed_by"]["count"])
-    console.log("Count of follow "+user["edge_follow"]["count"])
-    console.log(user["edge_owner_to_timeline_media"]["edges"][1]["node"])
+    arrayhtml["nickname"]=username;//string
+    arrayhtml["status"]=user["is_private"];//bool
+    arrayhtml["fullname"]=user["full_name"];//string
+    arrayhtml["countfollowers"]=user["edge_followed_by"]["count"];//int
+    arrayhtml["countfollowing"]=user["edge_follow"]["count"];//int
+    arrayhtml["busacc"]=user["is_business_account"];//bool
+    var averagecountoflikes =0;
+    var f = user["edge_owner_to_timeline_media"]["count"];
+    var cnt=0;
+    for (var i=0;i<f;i++){
+        
+        if (user["edge_owner_to_timeline_media"]["edges"][i]!== undefined){
+            if (user["edge_owner_to_timeline_media"]["edges"][i]["node"]["is_video"]===false){
+                averagecountoflikes = averagecountoflikes+ user["edge_owner_to_timeline_media"]["edges"][i]["node"]["edge_liked_by"]["count"];
+                cnt=cnt+1;
+        }
+    }
+}   
+    arrayhtml["average_count_of_likes"]=averagecountoflikes/cnt;
+    var averagecountofcomments=0
+    var cntforcomments=0
+    for (var i=0;i<f;i++){
+        
+        if (user["edge_owner_to_timeline_media"]["edges"][i]!== undefined){
+            averagecountofcomments = averagecountofcomments+ user["edge_owner_to_timeline_media"]["edges"][i]["node"]["edge_media_to_comment"]["count"];
+            cntforcomments=cntforcomments+1;
+        }
+}   
+    arrayhtml["average_count_of_comments"]=averagecountofcomments/cntforcomments;
+
     
     debugger;
 }
