@@ -6,96 +6,126 @@ export default class App extends Component {
   constructor(props) {
     super(props);
 
-    this.addActiveClass = this.addActiveClass.bind(this);
+    this.state = { addClass: false };
   }
-  addActiveClass() {}
+  toggle(e) {
+    this.setState({ addClass: !this.state.addClass });
+    this.link = "";
 
-  addrequest(e) {
-    if (
-      this.inputElement.value !== "" &&
-      this.name.value !== "" &&
-      this.address.value !== "" &&
-      this.number.value
-    ) {
-      var newRequest = {
-        text: this.inputElement.value,
-        key: Date.now()
-      };
+    const request = require("request-promise");
+    const cheerio = require("cheerio");
 
-      this.setState(prevState => {
-        return {
-          fridgeRepairRequests: prevState.fridgeRepairRequests.concat(
-            newRequest
-          )
-        };
+    /* Create the base function to be run */
+    async function start(username) {
+      /* Here you replace the username with your actual instagram username that you want to check */
+      var arrayhtml = {};
+
+      const BASE_URL = `https://www.instagram.com/${username}/`;
+
+      /* Send the request and get the html content */
+      let response = await request(BASE_URL, {
+        accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language":
+          "en-US,en;q=0.9,fr;q=0.8,ro;q=0.7,ru;q=0.6,la;q=0.5,pt;q=0.4,de;q=0.3",
+        "cache-control": "max-age=0",
+        "upgrade-insecure-requests": "1",
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
       });
+
+      /* Initiate Cheerio with the response */
+      let $ = cheerio.load(response);
+
+      /* Get the proper script of the html page which contains the json */
+      let script = $("script")
+        .eq(4)
+        .html();
+
+      /* Traverse through the JSON of instagram response */
+      let {
+        entry_data: {
+          ProfilePage: {
+            0: {
+              graphql: { user }
+            }
+          }
+        }
+      } = JSON.parse(/window\._sharedData = (.+);/g.exec(script)[1]);
+
+      /* Output the data */
+      arrayhtml["nickname"] = username; //string
+      arrayhtml["status"] = user["is_private"]; //bool
+      arrayhtml["fullname"] = user["full_name"]; //string
+      arrayhtml["countfollowers"] = user["edge_followed_by"]["count"]; //int
+      arrayhtml["countfollowing"] = user["edge_follow"]["count"]; //int
+      arrayhtml["busacc"] = user["is_business_account"]; //bool
+      var averagecountoflikes = 0;
+      var f = user["edge_owner_to_timeline_media"]["count"];
+      var cnt = 0;
+      for (var i = 0; i < f; i++) {
+        if (user["edge_owner_to_timeline_media"]["edges"][i] !== undefined) {
+          if (
+            user["edge_owner_to_timeline_media"]["edges"][i]["node"][
+              "is_video"
+            ] === false
+          ) {
+            averagecountoflikes =
+              averagecountoflikes +
+              user["edge_owner_to_timeline_media"]["edges"][i]["node"][
+                "edge_liked_by"
+              ]["count"];
+            cnt = cnt + 1;
+          }
+        }
+      }
+      arrayhtml["average_count_of_likes"] = averagecountoflikes / cnt;
+      var averagecountofcomments = 0;
+      var cntforcomments = 0;
+      for (var i = 0; i < f; i++) {
+        if (user["edge_owner_to_timeline_media"]["edges"][i] !== undefined) {
+          averagecountofcomments =
+            averagecountofcomments +
+            user["edge_owner_to_timeline_media"]["edges"][i]["node"][
+              "edge_media_to_comment"
+            ]["count"];
+          cntforcomments = cntforcomments + 1;
+        }
+      }
+      arrayhtml["average_count_of_comments"] =
+        averagecountofcomments / cntforcomments;
+      arrayhtml["cntposts"] = user["edge_owner_to_timeline_media"]["count"];
+      var zaebal = arrayhtml.nickname + " vnature zaebal";
+      this.th = zaebal;
     }
-    var xhr = new XMLHttpRequest();
-    xhr.open(
-      "GET",
-      "https://api.telegram.org/bot667797791:AAEO-pOPrPH3sDPZTNUKnwR7Wt8RJrIDvj4/sendMessage?chat_id=855636692&parse_mode=html&text=Сообщение с сайта:" +
-        "%0AИмя: " +
-        this.name.value +
-        "%0AНомер телефона: " +
-        this.number.value +
-        "%0AАдрес: " +
-        this.address.value +
-        "%0AТип услуги: " +
-        this.type.value +
-        "%0AОписание: " +
-        newRequest.text,
-      true
-    );
-    xhr.send();
-
-    this.inputElement.value = "";
-
-    this.name.value = "";
-
-    this.address.value = "";
-
-    this.number.value = "";
-
-    console.log(this.state.fridgeRepairRequests);
+    start("islambek.temirbek");
 
     e.preventDefault();
   }
 
-  deleterequest(key) {
-    var filteredRequests = this.state.fridgeRepairRequests.filter(function(
-      request
-    ) {
-      return request.key !== key;
-    });
-
-    this.setState({
-      fridgeRepairRequests: filteredRequests
-    });
-  }
-
   render() {
+    let main = ["main"];
+    if (this.state.addClass) {
+      main.push("vis");
+    }
     return (
       <div className="App">
-        <div className="main">
+        <div className={main.join(" ")}>
           <div className="choose">
-            <form className="form container">
-              <div className="header row">
-                <div className="col">Choose Profile</div>
+            <form className="form container" onSubmit={this.toggle.bind(this)}>
+              <div className="row">
+                <div className="col" />
+                <div className="col instagram">Choose Instagram Profile</div>
+                <div className="col" />
               </div>
               <div className="row">
                 <div className="col">
-                  <input placeholder="Link: " />
-                </div>
-              </div>
-              <div className="row">
-                <div className="col ">
-                  <button className="vk">VK</button>
-                </div>
-                <div className="col">
-                  <button className="instagram">Instagram</button>
-                </div>
-                <div className="col">
-                  <button className="facebook">Facebook</button>
+                  <input
+                    type="text"
+                    placeholder="Nickname: "
+                    ref={link => (this.link = link)}
+                  />
                 </div>
               </div>
               <div className="row">
@@ -108,6 +138,7 @@ export default class App extends Component {
             </form>
           </div>
         </div>
+        <div>{this.th}</div>
       </div>
     );
   }
