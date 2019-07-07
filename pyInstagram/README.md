@@ -26,7 +26,7 @@ User Guide
 To basic installation you should have git, python3 (prefer python3.6 or later), pip (optionally) in
 your system
 ```bash
-1. git clone https://github.com/olegyurchik/pyInstagram.git
+
 2. cd pyInstagram
 3. pip install .
 or
